@@ -1,12 +1,14 @@
+import multiprocessing
 import threading
 from collections import defaultdict
 
 
-class WarehouseManager(threading.Thread):
+class WarehouseManager(multiprocessing.Process):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.data = defaultdict(int)
+        self.all_process = []
 
     def run(self, requests):
         self.process_request(requests)
@@ -16,7 +18,11 @@ class WarehouseManager(threading.Thread):
             if proces == 'receipt':
                 self.data[key] += value
             elif proces == 'shipment':
-                self.data[key] -= value
+                if self.data.setdefault(key) > value:
+                    self.data[key] -= value
+                else:
+                    print(f'Нельзя взять: {value}-{key}, на складе: {self.data.setdefault(key)}')
+
 
 
 if __name__ == '__main__':
@@ -29,7 +35,7 @@ if __name__ == '__main__':
         ("product2", "receipt", 150),
         ("product1", "shipment", 30),
         ("product3", "receipt", 200),
-        ("product2", "shipment", 50)
+        ("product2", "shipment", 500)
     ]
 
     # Запускаем обработку запросов
