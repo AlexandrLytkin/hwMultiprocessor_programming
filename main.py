@@ -1,28 +1,39 @@
-import multiprocessing
-import threading
-from collections import defaultdict
+import time
+from multiprocessing import Process, Manager, Lock
 
 
-class WarehouseManager(multiprocessing.Process):
+class WarehouseManager:
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.data = defaultdict(int)
-        self.all_process = []
+        self.data = Manager().dict()
+        self.lock = Lock()
 
     def run(self, requests):
-        self.process_request(requests)
+        all_process = []
+        for request in requests:
+            process = Process(target=self.process_request, args=(request,))
+            all_process.append(process)
+            process.start()
+
+        for process in all_process:
+            process.join()
 
     def process_request(self, request):
-        for key, proces, value in request:
-            if proces == 'receipt':
+        key, act, value = request
+        if act == "receipt":
+            if act in self.data:
                 self.data[key] += value
-            elif proces == 'shipment':
-                if self.data.setdefault(key) > value:
+            else:
+                self.data[key] = value
+        elif act == "shipment":
+            if act in self.data:
+                if self.data[key] >= value:
                     self.data[key] -= value
                 else:
-                    print(f'Нельзя взять: {value}-{key}, на складе: {self.data.setdefault(key)}')
-
+                    print(f"Нельзя взять: {value} на складе больше чем имеется:")
+            else:
+                print(f"{value} нет на складе.")
 
 
 if __name__ == '__main__':
@@ -42,4 +53,4 @@ if __name__ == '__main__':
     manager.run(requests)
 
     # Выводим обновленные данные о складских запасах
-    print(dict(manager.data))
+    print(manager.data)
