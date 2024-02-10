@@ -3,8 +3,7 @@ from multiprocessing import Process, Manager, Lock
 
 class WarehouseManager:
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self):
         self.data = Manager().dict()
         self.lock = Lock()
 
