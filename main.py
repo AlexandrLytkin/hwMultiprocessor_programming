@@ -1,4 +1,3 @@
-import time
 from multiprocessing import Process, Manager, Lock
 
 
@@ -20,20 +19,21 @@ class WarehouseManager:
             process.join()
 
     def process_request(self, request):
-        key, act, value = request
-        if act == "receipt":
-            if act in self.data:
-                self.data[key] += value
-            else:
-                self.data[key] = value
-        elif act == "shipment":
-            if act in self.data:
-                if self.data[key] >= value:
-                    self.data[key] -= value
+        with self.lock:
+            key, act, value = request
+            if act == "receipt":
+                if key in self.data:
+                    self.data[key] += value
                 else:
-                    print(f"Нельзя взять: {value} на складе больше чем имеется:")
-            else:
-                print(f"{value} нет на складе.")
+                    self.data[key] = value
+            elif act == "shipment":
+                if key in self.data:
+                    if self.data[key] >= value:
+                        self.data[key] -= value
+                    else:
+                        print(f"Нельзя взять: {value} на складе больше чем имеется:", flush=True)
+                else:
+                    print(f"{value} нет на складе.", flush=True)
 
 
 if __name__ == '__main__':
@@ -53,4 +53,4 @@ if __name__ == '__main__':
     manager.run(requests)
 
     # Выводим обновленные данные о складских запасах
-    print(manager.data)
+    print(manager.data, flush=True)
