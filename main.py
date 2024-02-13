@@ -5,6 +5,7 @@ class WarehouseManager:
 
     def __init__(self):
         self.data = Manager().dict()
+        # self.data = {}
         self.lock = Lock()
 
     def run(self, requests):
